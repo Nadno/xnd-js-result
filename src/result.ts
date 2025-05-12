@@ -2,23 +2,29 @@
  * Represents a successful result.
  * @template T The type of the successful value.
  */
-export type Ok<T, E = Error> = Result<T, null> &
-  ResultMethods<T, E> & {
-    data: T;
-    error: E | null;
-  };
+export type Ok<T, E = Error> = Omit<
+  Result<T, null>,
+  keyof ResultChainMethods<any>
+> & {
+  data: T;
+  error: E | null;
+} & ResultMethods<T, E>;
 
 /**
  * Represents a failed result.
  * @template E The type of the error value.
  */
-export type Not<E, T = null> = Result<null, E> &
-  ResultMethods<T, E> & {
-    data: T | null;
-    error: E;
-  };
+export type Not<E, T = null> = Omit<
+  Result<null, E>,
+  keyof ResultChainMethods<any>
+> & {
+  data: T | null;
+  error: E;
+} & ResultMethods<T, E>;
 
 export type AnyResult<T, E = Error> = Ok<T, E> | Not<E, T>;
+
+export type AnyError<E, DE = Error> = E extends null | never ? DE : E;
 
 export type ResultMethods<T, E = Error> = {
   defaultValue<TValue = T>(value: TValue | ((data: T) => TValue)): TValue;
@@ -33,22 +39,33 @@ export type ResultMethods<T, E = Error> = {
 } & ResultChainMethods<T, E>;
 
 export type ResultChainMethods<T, E = Error> = {
-  ok<TError = Error>(
-    callback: (data: NonNullable<T>, result: Ok<T>) => void | never | undefined,
-  ): AnyResult<T, TError | E>;
-  ok<TReturn, TError = E>(
-    callback: (data: NonNullable<T>, result: Ok<T>) => TReturn,
-  ): AnyResult<TReturn, TError>;
+  // ok<TError = Error>(
+  //   callback: (data: NonNullable<T>, result: Ok<T>) => void | never | undefined,
+  // ): AnyResult<T, TError | E>;
+  // ok<TReturn, TError = Error>(
+  //   callback: (data: NonNullable<T>, result: Ok<T>) => TReturn,
+  // ): AnyResult<TReturn, TError | E>;
 
-  not<TData = T>(
-    callback: (
-      error: NonNullable<E>,
-      result: Not<E>,
-    ) => void | never | undefined,
-  ): AnyResult<TData, E>;
-  not<TReturn, TData = T>(
-    callback: (error: NonNullable<E>, result: Not<E>) => TReturn,
-  ): AnyResult<TData, TReturn>;
+  ok<TError = Error>(
+    callback: (data: T, result: Ok<T>) => void | never | undefined,
+  ): AnyResult<T, E | TError>;
+  ok<TReturn, TError = Error>(
+    callback: (data: T, result: Ok<T>) => TReturn,
+  ): AnyResult<TReturn, AnyError<E, TError>>;
+
+  // not<TData = T>(
+  //   callback: (error: E, result: Not<E>) => void | never | undefined,
+  // ): AnyResult<TData, E>;
+  // not<TReturn, TData = T>(
+  //   callback: (error: E, result: Not<E>) => TReturn,
+  // ): AnyResult<TData, TReturn>;
+
+  not(
+    callback: (error: AnyError<E>, result: Not<E>) => void | never | undefined,
+  ): AnyResult<T, E>;
+  not<TReturn>(
+    callback: (error: AnyError<E>, result: Not<E>) => TReturn,
+  ): AnyResult<T, TReturn>;
 
   to<TReturn>(mutator: (data: T) => TReturn): AnyResult<TReturn, E>;
 };
@@ -186,7 +203,7 @@ export default class Result<T, E = Error> {
    */
 
   public static not<E = Error, T = null>(errorOrFn: E | (() => E)): Not<E, T> {
-    return new Result(null, errorOrFn) as Not<E, T>;
+    return new Result(null, errorOrFn) as unknown as Not<E, T>;
   }
 
   /**
@@ -201,10 +218,10 @@ export default class Result<T, E = Error> {
   public static ok(): Ok<OkValue>;
   public static ok<T, E = Error>(dataOrFn: T | (() => T)): Ok<T, E>;
   public static ok<T>(dataOrFn: T | (() => T)): Ok<T>;
-  public static ok<T>(
+  public static ok<T, E = Error>(
     dataOrFn: T | (() => T) | string = Result.OK,
-  ): Ok<T | string> {
-    return new Result(dataOrFn as T | string) as Ok<T>;
+  ): Ok<T | string, E> {
+    return new Result(dataOrFn as T | string) as Ok<T | string, E>;
   }
 
   /**
@@ -225,9 +242,9 @@ export default class Result<T, E = Error> {
     promise: Promise<TData>,
   ): Promise<AnyResult<TData, TError>> {
     try {
-      return new Result(await promise, null) as Ok<TData, TError>;
+      return new Result(await promise, null) as unknown as Ok<TData, TError>;
     } catch (error) {
-      return new Result(null, error) as Not<TError, TData>;
+      return new Result(null, error) as  unknown as Not<TError, TData>;
     }
   }
 
@@ -502,14 +519,14 @@ export default class Result<T, E = Error> {
    * console.log(resultWithError.error); // Error: Value too high
    */
   public ok<TError = Error>(
-    callback: (data: NonNullable<T>, result: Ok<T>) => void | never | undefined,
-  ): AnyResult<T, TError | E>;
-  public ok<TReturn, TError = E>(
-    callback: (data: NonNullable<T>, result: Ok<T>) => TReturn,
-  ): AnyResult<TReturn, TError>;
+    callback: (data: T, result: Ok<T>) => void | never | undefined,
+  ): AnyResult<T, E | TError>;
   public ok<TReturn, TError = Error>(
-    callback: (data: NonNullable<T>, result: Ok<T>) => TReturn,
-  ): AnyResult<NonNullable<TReturn>, TError | E> {
+    callback: (data: T, result: Ok<T>) => TReturn,
+  ): AnyResult<TReturn, E | TError>;
+  public ok<TReturn, TError = Error>(
+    callback: (data: T, result: Ok<T>) => TReturn,
+  ): AnyResult<TReturn, E | TError> {
     try {
       if (Result.isOk(this)) {
         const result = callback(this.data as NonNullable<T>, this as Ok<T>);
@@ -517,14 +534,14 @@ export default class Result<T, E = Error> {
         const finalValue = result === undefined ? this.data : result;
         return Result.ok(finalValue) as unknown as AnyResult<
           NonNullable<TReturn>,
-          TError | E
+          E | TError
         >;
       }
-      return this as unknown as AnyResult<NonNullable<TReturn>, TError | E>;
+      return this as unknown as AnyResult<NonNullable<TReturn>, E | TError>;
     } catch (error) {
       return Result.not(error as TError) as unknown as AnyResult<
         NonNullable<TReturn>,
-        TError | E
+        E | TError
       >;
     }
   }
@@ -545,27 +562,23 @@ export default class Result<T, E = Error> {
    * console.log(unchanged.data); // 42
    */
 
-  public not<TData = T>(
-    callback: (
-      error: NonNullable<E>,
-      result: Not<E>,
-    ) => void | never | undefined,
-  ): AnyResult<TData, E>;
-  public not<TReturn, TData = T>(
-    callback: (error: NonNullable<E>, result: Not<E>) => TReturn,
-  ): AnyResult<TData, TReturn>;
-  public not<TReturn, TData = T>(
-    callback: (error: NonNullable<E>, result: Not<E>) => TReturn,
-  ): AnyResult<TData, TReturn> {
+  public not(
+    callback: (error: E | Error, result: Not<E>) => void | never | undefined,
+  ): AnyResult<T, E>;
+  public not<TReturn>(
+    callback: (error: E | Error, result: Not<E>) => TReturn,
+  ): AnyResult<T, TReturn>;
+  public not<TReturn>(
+    callback: (error: E | Error, result: Not<E>) => TReturn,
+  ): AnyResult<T, TReturn> {
     try {
       return Result.notOk(this)
         ? (Result.not(
-            callback(this.error as NonNullable<E>, this as Not<E>) ??
-              (this.error as E),
-          ) as AnyResult<TData, TReturn>)
-        : (this as unknown as AnyResult<TData, TReturn>);
+            callback(this.error as E, this as Not<E>) ?? (this.error as E),
+          ) as AnyResult<T, TReturn>)
+        : (this as unknown as AnyResult<T, TReturn>);
     } catch (error) {
-      return Result.not(error) as AnyResult<TData, TReturn>;
+      return Result.not(error) as AnyResult<T, TReturn>;
     }
   }
 

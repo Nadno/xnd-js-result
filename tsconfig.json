@@ -29,13 +29,13 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
   },
   "include": [
     "src"
   ],
   "exclude": [
     "node_modules",
-    "src/__test__"
-  ]
+    "src/__tests__/**/*"
+  ],
 }

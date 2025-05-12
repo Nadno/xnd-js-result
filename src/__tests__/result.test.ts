@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import Result from '@/result';
+import Result from '../result';
 
 describe('Result', () => {
   describe('static constructors', () => {
