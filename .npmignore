@@ -1,0 +1,19 @@
+# Source files
+src/__tests__/
+src/__examples__/
+
+# Development files
+node_modules/
+*.log
+.DS_Store
+*.tgz
+
+# Config files
+tsconfig.json
+tsconfig.build.json
+vite.config.ts
+vitest.config.ts
+
+# CI/CD files
+.github/
+.vscode/

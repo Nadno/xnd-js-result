@@ -7,13 +7,13 @@ A modern TypeScript library for elegant and functional error handling. This libr
 ## Installation
 
 ```bash
-npm install js-x-result
+npm install @xnd-js/result
 ```
 
 or
 
 ```bash
-yarn add js-x-result
+yarn add @xnd-js/result
 ```
 
 Alternatively, you can copy the [result.ts](src/result.ts) file directly into your project. This approach can be useful for small projects or when you need to make specific modifications to the implementation.

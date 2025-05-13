@@ -1,12 +1,23 @@
 {
-  "name": "@js-x/result",
+  "name": "@xnd-js/result",
   "description": "Strongly typed Result monad implementation in TypeScript",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "author": "Nadno",
   "private": false,
   "type": "module",
   "node-version": "v22.13.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nadno/js-x-result.git"
+  },
+  "homepage": "https://github.com/nadno/js-x-result",
+  "bugs": {
+    "url": "https://github.com/nadno/js-x-result/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "result",
     "typescript",
@@ -18,10 +29,19 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -p tsconfig.build.json",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublishOnly": "npm run test && npm run build"
   },
+  "main": "dist/result.js",
+  "module": "dist/result.js",
+  "types": "dist/result.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "devDependencies": {
     "@types/node": "^22.15.17",
     "typescript": "~5.8.3",
