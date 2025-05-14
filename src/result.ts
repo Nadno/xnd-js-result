@@ -27,7 +27,7 @@ export type AnyResult<T, E = Error> = Ok<T, E> | Not<E, T>;
 export type AnyError<E, DE = Error> = E extends null | never ? DE : E;
 
 export type ResultMethods<T, E = Error> = {
-  defaultValue<TValue = T>(value: TValue | ((data: T) => TValue)): TValue;
+  defaultValue<TValue = T>(value: TValue | ((data: T) => TValue)): TValue | T;
 
   value<TValue>(mutator: (data: T) => TValue): TValue;
   value(): T;
@@ -202,6 +202,8 @@ export default class Result<T, E = Error> {
    * console.log(result.error); // Error: Something went wrong
    */
 
+  public static not<E = Error, T = null>(errorOrFn: E | (() => E)): Not<E, T>;
+  public static not<E = Error>(errorOrFn: E | (() => E)): Not<E, any>;
   public static not<E = Error, T = null>(errorOrFn: E | (() => E)): Not<E, T> {
     return new Result(null, errorOrFn) as unknown as Not<E, T>;
   }
@@ -215,9 +217,9 @@ export default class Result<T, E = Error> {
    * const result = Result.ok(42);
    * console.log(result.data); // 42
    */
-  public static ok(): Ok<OkValue>;
+  public static ok(): Ok<OkValue, any>;
   public static ok<T, E = Error>(dataOrFn: T | (() => T)): Ok<T, E>;
-  public static ok<T>(dataOrFn: T | (() => T)): Ok<T>;
+  public static ok<T>(dataOrFn: T | (() => T)): Ok<T, any>;
   public static ok<T, E = Error>(
     dataOrFn: T | (() => T) | string = Result.OK,
   ): Ok<T | string, E> {
@@ -447,7 +449,7 @@ export default class Result<T, E = Error> {
    */
   public defaultValue<TValue = T>(
     value: TValue | ((data: T) => TValue),
-  ): TValue {
+  ): TValue | T {
     const getDefaultValue = () =>
       typeof value === 'function' ? (value as Function)(this.data) : value;
 
