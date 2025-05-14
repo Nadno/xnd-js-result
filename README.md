@@ -153,24 +153,51 @@ function processFile(fileName: string): AnyResult<any, {code: string, message: s
 ### API Operations
 
 ```typescript
-async function fetchUser(id: string): Promise<AnyResult<any, any>> {
-  return await Result.tryCatchAsync(async () => {
+type UserData = {
+  name: string;
+  email: string;
+  isAdmin: boolean;
+};
+
+type CustomError = {
+  code: string;
+  message: string;
+  recoverable: boolean;
+};
+
+async function fetchUser(
+  id: string,
+): Promise<AnyResult<UserData, CustomError>> {
+  const result = await Result.tryCatchAsync<UserData>(async () => {
     const response = await fetch(`https://api.example.com/users/${id}`);
     if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-    
+
     const user = await response.json();
-    
+
     return {
       name: user.name,
       email: user.email,
-      isAdmin: user.role === 'admin'
+      isAdmin: user.role === 'admin',
     };
-  })
-  .not(error => ({
+  });
+
+  return result.not((error) => ({
     code: 'api_error',
     message: error.message,
-    recoverable: true
+    recoverable: true,
   }));
+}
+
+const fetchResult = await fetchUser('user-1');
+
+if (Result.isOk(fetchResult)) {
+  console.log('***USER_EMAIL:', fetchResult.data.email);
+} else {
+  console.error({
+    code: fetchResult.error.code,
+    message: fetchResult.error.message,
+    recoverable: fetchResult.error.recoverable,
+  });
 }
 ```
 
