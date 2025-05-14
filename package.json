@@ -1,7 +1,7 @@
 {
   "name": "@xnd-js/result",
   "description": "Strongly typed Result monad implementation in TypeScript",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
   "author": "Nadno",
   "private": false,
@@ -24,8 +24,15 @@
     "functional",
     "error-handling",
     "monad",
-    "js-x",
-    "success-failure"
+    "xnd-js",
+    "success",
+    "failure",
+    "error",
+    "try",
+    "catch",
+    "try-catch",
+    "async",
+    "util"
   ],
   "scripts": {
     "dev": "vite",
